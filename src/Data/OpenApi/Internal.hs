@@ -50,7 +50,7 @@ import           Text.Read             (readMaybe)
 import           Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd as InsOrdHashMap
 
-import Data.OpenApi.Aeson.Compat        (deleteKey)
+import Data.OpenApi.Aeson.Compat        (deleteKey, filterKeys, keyToText, objectToList)
 import Data.OpenApi.Internal.AesonUtils (AesonDefaultValue (..), HasSwaggerAesonOptions (..),
                                          mkSwaggerAesonOptions, saoAdditionalPairs, saoSubObject,
                                          sopSwaggerGenericParseJSON, sopSwaggerGenericToEncoding,
@@ -649,7 +649,7 @@ data ParamLocation
   | ParamCookie
   deriving (Eq, Ord, Show, Generic, Data, Typeable)
 
-instance Hashable ParamLocation 
+instance Hashable ParamLocation
 
 type Format = Text
 
@@ -1018,7 +1018,7 @@ data Referenced a
 instance IsString a => IsString (Referenced a) where
   fromString = Inline . fromString
 
-newtype URL = URL { getUrl :: Text } 
+newtype URL = URL { getUrl :: Text }
   deriving (Eq, Ord, Show, Hashable, ToJSON, FromJSON, Data, Typeable, AesonDefaultValue)
 
 data AdditionalProperties
@@ -1555,19 +1555,19 @@ instance FromJSON Param where
   parseJSON = sopSwaggerGenericParseJSON
 
 instance FromJSON Responses where
-  parseJSON (Object o) = Responses 
-    <$> o .:? "default" 
-    <*> parseJSON 
-      ( Object 
-        ( HashMap.filterWithKey (\k _ -> not $ isExt k) 
-          $ HashMap.delete "default" o 
-        ) 
-      ) 
-    <*> case HashMap.filterWithKey (\k _ -> isExt k) o of
-        exts
-          | HashMap.null exts -> pure (SpecificationExtensions mempty)
-          | otherwise -> parseJSON (Object exts)
-    
+  parseJSON (Object o) = Responses
+    <$> o .:? "default"
+    <*> parseJSON
+      ( Object
+        ( filterKeys (not . isExt . keyToText) $
+          deleteKey "default" o
+        )
+      )
+    <*> case filterKeys (isExt . keyToText) o of
+          exts
+            | null exts -> pure (SpecificationExtensions mempty)
+            | otherwise -> parseJSON (Object exts)
+
   parseJSON _ = empty
 
 isExt :: Text -> Bool
@@ -1642,7 +1642,7 @@ instance FromJSON SpecificationExtensions where
   parseJSON = withObject "SpecificationExtensions" extFieldsParser
     where
       extFieldsParser = pure . SpecificationExtensions . InsOrdHashMap.fromList . catMaybes . filterExtFields
-      filterExtFields = fmap (\(k, v) -> (, v) <$> Text.stripPrefix "x-" k) . HashMap.toList
+      filterExtFields = fmap (\(k, v) -> (, v) <$> Text.stripPrefix "x-" (keyToText k)) . objectToList
 
 
 instance FromJSON Info where
@@ -1695,7 +1695,7 @@ instance HasSwaggerAesonOptions SecurityScheme where
 instance HasSwaggerAesonOptions Schema where
   swaggerAesonOptions _ = mkSwaggerAesonOptions "schema" & saoSubObject .~ ["paramSchema", "extensions"]
 instance HasSwaggerAesonOptions OpenApi where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "swagger" & saoAdditionalPairs .~ [("openapi", "3.0.0")] 
+  swaggerAesonOptions _ = mkSwaggerAesonOptions "swagger" & saoAdditionalPairs .~ [("openapi", "3.0.0")]
     & saoSubObject .~ ["extensions"]
 instance HasSwaggerAesonOptions Example where
   swaggerAesonOptions _ = mkSwaggerAesonOptions "example" & saoSubObject .~ ["extensions"]
