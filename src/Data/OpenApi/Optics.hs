@@ -142,6 +142,7 @@ makeFieldLabels ''Encoding
 makeFieldLabels ''Example
 makeFieldLabels ''Discriminator
 makeFieldLabels ''Link
+makeLenses ''SpecificationExtensions
 
 -- Prisms
 

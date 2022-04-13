@@ -541,6 +541,7 @@ data Param = Param
     -- the examples value SHALL override the example provided by the schema.
   , _paramExamples :: InsOrdHashMap Text (Referenced Example)
 
+    -- | Extensions for the parameter. These are referenced without the 'x-' prefix. Default value is @Map.empty@.
   , _paramExtensions :: SpecificationExtensions
 
     -- TODO
