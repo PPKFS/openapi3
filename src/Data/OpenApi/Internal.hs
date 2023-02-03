@@ -1707,8 +1707,7 @@ instance HasSwaggerAesonOptions SecurityScheme where
 instance HasSwaggerAesonOptions Schema where
   swaggerAesonOptions _ = mkSwaggerAesonOptions "schema" & saoSubObject .~ ["paramSchema", "extensions"]
 instance HasSwaggerAesonOptions OpenApi where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "swagger" & saoAdditionalPairs .~ [("openapi", "3.0.0")] 
-    & saoSubObject .~ ["extensions"]
+  swaggerAesonOptions _ = mkSwaggerAesonOptions "swagger" & saoSubObject .~ ["extensions"]
 instance HasSwaggerAesonOptions Example where
   swaggerAesonOptions _ = mkSwaggerAesonOptions "example" & saoSubObject .~ ["extensions"]
 instance HasSwaggerAesonOptions Encoding where
